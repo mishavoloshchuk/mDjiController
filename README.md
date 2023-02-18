@@ -3,6 +3,7 @@ mDjiController
  - Connect your DJI Remote Controller to your PC and use it to play simulators.
  - Currently confirmed working controllers: DJI Phantom 3 Advanced
  - For Mavic Mini or a Python interface, take a look at [justin97530/miniDjiController](https://github.com/justin97530/miniDjiController)
+ - DJI Phantom 2 version of mDjiController - [Matsemann/mDjiController](https://github.com/Matsemann/mDjiController)
 -----------------------------------------------------------------------------
 
 This is a program that connects to your DJI Phantom Remote Controller (RC),
@@ -18,7 +19,7 @@ In order for it to work, the original drivers from DJI must be installed, and so
 	but the driver included in DJI Flight Simulator:  https://www.dji.com/simulator
 	You can install only game launcher without installing the game.
 	Later, you can even delete the launcher.
-	Or you can manualy install the driver from "Driver" folder (the driver is also taken from DJI Flight Simulator). You can install it from the "Device manager".
+	Or you can manually install the driver from "Driver" folder from zip (the driver is also taken from DJI Flight Simulator). You can install it from the "Device manager".
 
 * Then find "Configure VJoy" in windows start menu and open it. Activate the "Enable vJoy" checkbox, and set number of buttons to 9.
 
