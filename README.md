@@ -9,11 +9,14 @@ mDjiController
 This is a program that connects to your DJI Phantom Remote Controller (RC),
 reads the stick positions and tells Windows that position. A simplified, wannabe driver.
 
+In use:
+![](https://github.com/mishavoloshchuk/mDjiController/raw/master/in_use.png)
+
 Installation / Usage
 ------------
 
 In order for it to work, the original drivers from DJI must be installed, and something called vJoy.
-
+* Download [https://github.com/mishavoloshchuk/mDjiController/raw/master/mDjiController.zip](mDjiController.zip) and unzip
 * Download and install vJoy from here: https://sourceforge.net/projects/vjoystick
 * Driver installing. There is no official driver for DJI Phantom 3 remote controller, 
 	but the driver included in DJI Flight Simulator:  https://www.dji.com/simulator
