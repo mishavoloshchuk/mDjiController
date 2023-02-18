@@ -1,11 +1,14 @@
 #include "Joystick.h"
-#include "vjoyinterface.h"
+#include "..\inc\vjoyinterface.h"
 
 Joystick::Joystick(int id, int logging)
 {
 	interfaceId = id;
 	if (logging == 0) {
 		log = true;
+	}
+	else {
+		log = false;
 	}
 
 	printf("Creating vJoy connection\n");
@@ -48,60 +51,82 @@ Joystick::Joystick(int id, int logging)
 	}
 }
 
-void Joystick::update(int l_hor, int l_ver, int r_hor, int r_ver, int lever_left, int lever_right, int camera)
+int pow(int a, int b) {
+	int n = 1;
+	for (int i = 0; i < b; i++) {
+		n *= a;
+	}
+	return n;
+}
+
+
+void Joystick::update(int l_hor, int l_ver, int r_hor, int r_ver, int lever_left, int buttons, short wheel, int camera)
 {
-	// Values must be between 0x0 and 0x8000
-	// The values from the controller are between -1000 and 1000, so we just scale them between 0 and 16000 (maximum range in vJoyMonitor)	
-	l_hor += 1000;
-	l_ver += 1000;
-	r_hor += 1000;
-	r_ver += 1000;
-	camera -= 1000;
-
-	l_hor *= 16;
-	l_ver *= 16;
-	r_hor *= 16;
-	r_ver *= 16;
-	camera *= -16; // negative multiplication to make the value feel natural (left = negative | right = positive)
-
 	// Read values from left lever
-	// -780 = 'OFF' position | 0 = 'CL' position | 780 = 'HL' position
-	if (lever_left == -780) {
-		button_1 = true;
-		button_2 = false;
-		button_3 = false;
+	// P-mode | A-mode | F-mode
+	if (lever_left >= 32) {
+		fMode = 2;
 	}
-	else if (lever_left == 780) {
-		button_1 = false;
-		button_2 = false;
-		button_3 = true;
-	} // else remain as before, sometimes this value is a bit weird
-	else if (lever_left == 0) {
-		button_1 = false;
-		button_2 = true;
-		button_3 = false;
+	else if (lever_left >= 16) {
+		fMode = 1;
+	}
+	else if (lever_left >= 0) {
+		fMode = 0;
 	}
 
-	// Read values from right lever
-	// -780 = 'GPS' position | 0 = 'ATTI' position | 780 = 'ATTI' position
-	if (lever_right == -780) {
-		button_4 = true;
-		button_5 = false;
-		button_6 = false;
+	// The values from the controller are between ~750 and ~3450, so we just scale them between 0 and 32000 (maximum range in vJoyMonitor)
+	l_hor -= 750;
+	l_ver -= 750;
+	r_hor -= 750;
+	r_ver -= 750;
+
+	l_hor *= 12;
+	l_ver *= 12;
+	r_hor *= 12;
+	r_ver *= 12;
+
+	camera *= 8;
+
+	// The values are from 0 to 2 then it converts from 0 to 32768
+	fMode *= 16384;
+
+	// Read and process buttons data from buttons. Variable "buttons" if button pressed is the sum of exponentiation of number two (sum of button_(0+1)\(1+1)\(2+1)... = 2^2\2^4\2^8...). For example: if pressed button[3] and button[5], will equal 2^3 + 2^5 = 40
+	if (buttons < 0) { // button[6] (RTH button) == -128
+		buttons += 128;
+		btns[6] = true;
 	}
-	else if (lever_right == 780) {
-		button_4 = false;
-		button_5 = false;
-		button_6 = true;
-	} // else remain as before, sometimes this value is a bit weird
 	else {
-		button_4 = false;
-		button_5 = true;
-		button_6 = false;
+		btns[6] = false;
+	}
+	// Other buttons
+	for (int i = 6; i > 0; --i) {
+		if (buttons - pow(2, i) >= 0) {
+			btns[i - 1] = true;
+			buttons -= pow(2, i);
+		}
+		else {
+			btns[i - 1] = false;
+		}
 	}
 
-	if (log)
-		printf("L vert: %-5d | L hori: %-5d | R vert: %-5d | R hori: %-5d | btn1: %-d | btn2: %-d | btn3: %-d | btn4: %-d | btn5: %-d | btn6: %-d | camera: %-d\n", l_ver, l_hor, r_ver, r_hor, button_1, button_2, button_3, button_4, button_5, button_6, camera);
+	// Read wheel scroll direction from wheel variable
+	if (wheel > wheel_prev) { // If current wheel position higher than previous
+		rWheelLeft = true;
+		rWheelRight = false;
+		wheel_prev = wheel;
+	}
+	else if (wheel < wheel_prev) {
+		rWheelLeft = false;
+		rWheelRight = true;
+		wheel_prev = wheel;
+	}
+	else {
+		rWheelLeft = rWheelRight = false;
+	}
+
+	if (log) {
+		printf("L vert: %-5d | L hori: %-5d | R vert: %-5d | R hori: %-5d | btn1: %-d | btn2: %-d | btn3: %-d | btn4: %-d | btn5: %-d | btn6: %-d | btn7: %-d | R wheel left: %-d | R wheel right: %-d | camera: %-5d | flight mode: %-5d\n", l_ver, l_hor, r_ver, r_hor, btns[0], btns[1], btns[2], btns[3], btns[4], btns[5], btns[6], rWheelLeft, rWheelRight, camera, fMode);
+	}
 
 	// Send stick values to vJoy
 	SetAxis(l_hor, interfaceId, HID_USAGE_X);
@@ -109,14 +134,18 @@ void Joystick::update(int l_hor, int l_ver, int r_hor, int r_ver, int lever_left
 	SetAxis(r_hor, interfaceId, HID_USAGE_Z);
 	SetAxis(r_ver, interfaceId, HID_USAGE_RX);
 	SetAxis(camera, interfaceId, HID_USAGE_RY);
+	SetAxis(fMode, interfaceId, HID_USAGE_RZ);
 	
 	// Send button values to vJoy
-	SetBtn(button_1, interfaceId, 1);
-	SetBtn(button_2, interfaceId, 2);
-	SetBtn(button_3, interfaceId, 3);
-	SetBtn(button_4, interfaceId, 4);
-	SetBtn(button_5, interfaceId, 5);
-	SetBtn(button_6, interfaceId, 6);
+	SetBtn(btns[0], interfaceId, 1);    // C1
+	SetBtn(btns[1], interfaceId, 2);    // C2
+	SetBtn(btns[2], interfaceId, 3);    // Right wheel button
+	SetBtn(btns[3], interfaceId, 4);    // Play button
+	SetBtn(btns[4], interfaceId, 5);    // Camera shutter
+	SetBtn(btns[5], interfaceId, 6);    // Rec
+	SetBtn(btns[6], interfaceId, 7);   // Return To Home (RTH)
+	SetBtn(rWheelLeft, interfaceId, 8); // Wheel scroll -
+	SetBtn(rWheelRight, interfaceId, 9); // Wheel scroll +
 }
 
 Joystick::~Joystick()

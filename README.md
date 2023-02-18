@@ -1,35 +1,28 @@
 mDjiController
 ===============
  - Connect your DJI Remote Controller to your PC and use it to play simulators.
- - Currently confirmed working controllers: DJI Phantom 2
+ - Currently confirmed working controllers: DJI Phantom 3 Advanced
  - For Mavic Mini or a Python interface, take a look at [justin97530/miniDjiController](https://github.com/justin97530/miniDjiController)
- - For DJI Mini 2 or a Python interface, take a look at [usatenko/DjiMini2RCasJoystick](https://github.com/usatenko/DjiMini2RCasJoystick)
 -----------------------------------------------------------------------------
-
 
 This is a program that connects to your DJI Phantom Remote Controller (RC),
 reads the stick positions and tells Windows that position. A simplified, wannabe driver.
 
-In use:
-![](https://raw.githubusercontent.com/Matsemann/mDjiController/master/in_use.png)
-
-Here I'm flying a DJI Phantom in HELI-X5 using mDjiController. Open up the image in big version to see the controller configuration.
-
 Installation / Usage
 ------------
 
-### For a thorough guide on how to get started, see this blog post: [Using a Phantom 2 DJI Controller in AirSim](https://timebutt.github.io/static/using-a-phantom-dji-controller-in-airsim/)
-
-### UPDATE: Slaterbbx has added more features to this, you should also check out his fork of this here: https://github.com/slaterbbx/mDjiController
-
 In order for it to work, the original drivers from DJI must be installed, and something called vJoy.
 
-* Download mDjiController.zip from above ( https://github.com/Matsemann/mDjiController/blob/master/mDjiController.zip?raw=true )
-* Download DJI WIN Driver Installer from here: http://www.dji.com/product/phantom-2/download
-* Download vJoy from here: http://vjoystick.sourceforge.net/site/index.php/download-a-install/72-download
+* Download and install vJoy from here: https://sourceforge.net/projects/vjoystick
+* Driver installing. There is no official driver for DJI Phantom 3 remote controller, 
+	but the driver included in DJI Flight Simulator:  https://www.dji.com/simulator
+	You can install only game launcher without installing the game.
+	Later, you can even delete the launcher.
+	Or you can manualy install the driver from "Driver" folder (the driver is also taken from DJI Flight Simulator). You can install it from the "Device manager".
 
-* Install both.
-* Then connect your RC to your computer via USB and turn it on.
+* Then find "Configure VJoy" in windows start menu and open it. Activate the "Enable vJoy" checkbox, and set number of buttons to 9.
+
+* Connect your RC to your computer via USB and turn it on.
 
 * Run mDjiController.exe, and select the correct COM port. By default you should try writing "3".
 * For vJoy, write 1 unless you use vJoy already and have different configurations.

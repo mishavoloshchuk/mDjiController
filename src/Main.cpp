@@ -7,7 +7,7 @@
 #include "Serial.h"
 #include "Joystick.h"
 
-
+//#pragma comment(lib, "User32.lib")
 
 short littleEndiansToShort(int first, int second) {
 	if (first < 0) {
@@ -20,15 +20,13 @@ short littleEndiansToShort(int first, int second) {
 }
 
 void run(char* portName, int stickId, int logging) {
-
-	char initData[] = { 0x55, 0xaa, 0x55, 0xaa, 0x1e, 0x00, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00, 0x80, 0x00, 0x04, 0x04, 0x74, 0x94, 0x35, 0x00, 0xd8, 0xc0, 0x41, 0x00, 0x30, 0xf6, 0x08, 0x00, 0x00, 0xf6, 0x69, 0x9c, 0x01, 0xe8};
-	char pingData[] = { 0x55, 0xaa, 0x55, 0xaa, 0x1e, 0x00, 0x01, 0x00, 0x00, 0x1c, 0x02, 0x00, 0x80, 0x00, 0x06, 0x01, 0x28, 0x97, 0xae, 0x03, 0x28, 0x36, 0xa4, 0x03, 0x28, 0x36, 0xa4, 0x03, 0xab, 0xa7, 0x30, 0x00, 0x03, 0x53};
+	char initData[] = { 0x55, 0xaa, 0x55, 0xaa, 0x1e, 0x00, 0x01, 0x00, 0x00, 0x01, 0x01, 0x00, 0x80, 0x00, 0x04, 0x04, 0x74, 0x94, 0x35, 0x00, 0xd8, 0xc0, 0x41, 0x00, 0x30, 0xf6 };
+	char pingData[] = { 0x55, 0x0D, 0x04, 0x33, 0x0A, 0x03, 0x04, 0x00, 0x40, 0x00, 0x0E, 0xD0, 0xE3, 0x55, 0x0D, 0x04, 0x33, 0x0A, 0x0E, 0x05, 0x00, 0x40, 0x06, 0x27, 0x58, 0x35 };
 
 	char incomingData[256] = "";
 	int dataLength = 256;
 	int readResult = 0;
 	bool shouldRun = true;
-
 
 	Joystick j(stickId, logging);
 	if (!j.isConnected()) {
@@ -46,37 +44,37 @@ void run(char* portName, int stickId, int logging) {
 	printf("\nEverything is ready\n\n");
 	s.WriteData(initData, 34);
 
-	printf("Running...\nPress ESC to quit\n");
+	printf("Running...\nPress SHIFT + ESC to quit\n");
 	Sleep(2000);
 
 	while (s.IsConnected() && shouldRun)
-	{
-		s.WriteData(pingData, 34); // write this once in a while, otherwise it stops sending? :O
+	{	
+		s.WriteData(pingData, 39); // write this once in a while, otherwise it stops sending? :O
 		readResult = s.ReadData(incomingData, dataLength);
 
-		if (readResult == 76 && incomingData[0] == 0x55) { // probably positioning data
-			short left_vertical = littleEndiansToShort(incomingData[39], incomingData[40]);
-			short left_horizontal = littleEndiansToShort(incomingData[43], incomingData[44]);
+		if (readResult == 58 && incomingData[0] == 0x55) { // probably positioning data
+			short right_vertical = littleEndiansToShort(incomingData[16], incomingData[17]);
+			short right_horizontal = littleEndiansToShort(incomingData[18], incomingData[19]);
 
-			short right_horizontal = littleEndiansToShort(incomingData[31], incomingData[32]);
-			short right_vertical = littleEndiansToShort(incomingData[35], incomingData[36]);
+			short left_vertical = littleEndiansToShort(incomingData[20], incomingData[21]);
+			short left_horizontal = littleEndiansToShort(incomingData[22], incomingData[23]);
 
-			short left_lever = littleEndiansToShort(incomingData[47], incomingData[48]);
-			short right_lever = littleEndiansToShort(incomingData[51], incomingData[52]);
+			short left_lever = incomingData[28];
+			short buttons = incomingData[29];
+			short wheel = incomingData[26];
 
-			short camera = littleEndiansToShort(incomingData[55], incomingData[56]);
+			short camera = littleEndiansToShort(incomingData[24], incomingData[25]);
 
 			// update our virtual joystick
-			j.update(left_horizontal, left_vertical, right_horizontal, right_vertical, left_lever, right_lever, camera);
+			j.update(left_horizontal, left_vertical, right_horizontal, right_vertical, left_lever, buttons, wheel, camera);
 		}
-
-
-		if (GetAsyncKeyState(VK_ESCAPE)) {
-			shouldRun = false;
-			printf("\n\nDetected ESC, quitting...\n");
-		}
-
 		Sleep(10);
+
+
+		if ( GetKeyState(VK_ESCAPE) <= -127 && GetKeyState(VK_SHIFT) <= -127) {
+			shouldRun = false;
+			printf("\n\nDetected SHIFT + ESC, quitting...\n");
+		}
 	}
 
 }
